@@ -4,28 +4,50 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Check out the code from the repository
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # Step 2: Set up the correct Node.js version
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 16
+        node-version: 18  # Use Node.js 18.x as required by Angular CLI
 
+    # Step 3: Install dependencies and Ionic CLI
     - name: Install dependencies
       run: |
         npm install -g @ionic/cli
         npm ci
         ionic build
 
+    # Step 4: Set up Android build tools
+    - name: Set up Android SDK
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 31  # Specify the API level as per your app's needs
+        target: default
+        channel: stable
+
+    # Step 5: Build the APK
     - name: Build APK
       run: |
         npm install -g cordova-res native-run
         ionic cap add android
         ionic cap build android --prod
+
+    # Step 6: Upload APK as an artifact
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-release.apk
+        path: android/app/build/outputs/apk/debug/app-debug.apk
