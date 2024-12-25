@@ -1,0 +1,31 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install dependencies
+      run: |
+        npm install -g @ionic/cli
+        npm ci
+        ionic build
+
+    - name: Build APK
+      run: |
+        npm install -g cordova-res native-run
+        ionic cap add android
+        ionic cap build android --prod
